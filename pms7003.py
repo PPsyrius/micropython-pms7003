@@ -1,7 +1,6 @@
-import machine
-import struct
-import time
-
+from machine import UART
+from ustruct import unpack
+from utime import sleep
 
 class UartError(Exception):
     pass
@@ -29,8 +28,8 @@ class Pms7003:
     PMS_ERROR = 14
     PMS_CHECKSUM = 15
 
-    def __init__(self, uart):
-        self.uart = machine.UART(uart, baudrate=9600, bits=8, parity=None, stop=1)
+    def __init__(self, uart, rx, tx):
+        self.uart = UART(uart, baudrate=9600, bits=8, parity=None, stop=1, rx=rx, tx=tx)
 
     def __repr__(self):
         return "Pms7003({})".format(self.uart)
@@ -53,7 +52,7 @@ class Pms7003:
             raise UartError('Failed to write to UART')
 
         if response:
-            time.sleep(2)
+            sleep(2)
             buffer = self.uart.read(len(response))
 
             if buffer != response:
@@ -80,7 +79,8 @@ class Pms7003:
             if len(read_bytes) < 30:
                 continue
 
-            data = struct.unpack('!HHHHHHHHHHHHHBBH', read_bytes)
+
+            data = unpack('!HHHHHHHHHHHHHBBH', read_bytes)
 
             checksum = Pms7003.START_BYTE_1 + Pms7003.START_BYTE_2
             checksum += sum(read_bytes[:28])
@@ -136,8 +136,8 @@ class PassivePms7003(Pms7003):
         [Pms7003.START_BYTE_1, Pms7003.START_BYTE_2, 0xe2, 0x00, 0x00, 0x01, 0x71]
     )
 
-    def __init__(self, uart):
-        super().__init__(uart=uart)
+    def __init__(self, uart, rx, tx):
+        super().__init__(uart=uart, rx=rx, tx=tx)
         # use passive mode pms7003
         self._send_cmd(request=PassivePms7003.ENTER_PASSIVE_MODE_REQUEST,
                        response=PassivePms7003.ENTER_PASSIVE_MODE_RESPONSE)

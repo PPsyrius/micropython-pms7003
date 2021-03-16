@@ -77,10 +77,11 @@ callback = lambda __: micropython.schedule(do_work, 0)
 This repo also contains a simple class that can help calculate the Air Quality Index (as described [here](https://en.wikipedia.org/wiki/Air_quality_index#Computing_the_AQI))
 
 ```python
+from machine import Pin
 from pms7003 import Pms7003
 from aqi import AQI
 
-pms = Pms7003(uart=2)
+pms = Pms7003(uart=1, rx=Pin(5), tx=Pin(4))
 pms_data = pms.read()
 aqi = AQI.aqi(pms_data['PM2_5_ATM'], pms_data['PM10_0_ATM'])
 ```
