@@ -1,6 +1,6 @@
 # PMS7003 MicroPython Driver
 
-This is a MicroPython adaptation inspired by this Raspberry implementation: https://www.raspberrypi.org/forums/viewtopic.php?p=1244895&sid=5f9dab0e19a7086f9b900b51316ff349#p1244895
+This is a MicroPython adaptation inspired by this [Raspberry implementation](https://www.raspberrypi.org/forums/viewtopic.php?p=1244895&sid=5f9dab0e19a7086f9b900b51316ff349#p1244895)
 
 [Here](https://botland.com.pl/index.php?controller=attachment&id_attachment=2182) you can find the data sheet from [botland.com.pl](https://botland.com.pl/czujniki-czystosci-powietrza/10924-czujnik-pylu-czystosci-powietrza-pms7003-33v-uart.html)
 
@@ -9,6 +9,10 @@ This is a MicroPython adaptation inspired by this Raspberry implementation: http
 ### UART
 I used it with an ESP32. Tried with ESP8266 but since it has only one (full)UART that is being used by the REPL (and WebREPL) it was unusable. ESP32 has an unused UART (UART 2) that can be used to communicate with other devices. So you need a chip that has a free UART (like ESP32).
 
+\* **__Note__**: While I've managed to get this iteration of the library working with Raspberry Pi Pico board on both `UART0` and `UART1`, I can't get the Passive driver for this working *yet* though, so I won't be doing a merge request with the main repo soon until I fixed that up.
+
+The Raspberry Pi Pico adaptation here is based on this [forum post](https://forum.micropython.org/viewtopic.php?f=2&t=9656), and does requires explicit `tx` and `rx` pin declarations.
+
 ### Voltage
 The documentation claims that the device needs to run on 5V as it's internal fan is driven by 5V where the data pins output 3.3V for high.
 **This was not the case for me** I could not read any data other than zeros from the UART when running on 5V.
@@ -16,11 +20,14 @@ Powering the whole device with 3.3V works fine (even though the fan may spin wit
 I tested running on 3.3V on six different PMS7003 devices.
 [MicroPython forum link where I asked for help](https://forum.micropython.org/viewtopic.php?t=4566)
 
+\* **__Note__**: Does seems to work fine for me on 5V for Raspberry Pi Pico.
+
 ## Example usage
 
+	from machine import Pin
     from pms7003 import Pms7003
 
-    pms = Pms7003(uart=2)
+    pms = Pms7003(uart=1, rx=Pin(5), tx=Pin(4))
     pms_data = pms.read()
 
 `Pms7003.read()` will return a dictionary with *the oldest* read that is in the buffer. It means that your reads will always be a bit off in time, depending on the UART's buffer size and the frequency of your reads.
